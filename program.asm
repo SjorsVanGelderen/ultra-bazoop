@@ -73,9 +73,8 @@ player_swim_count	.rs 1
 
 bubble_x		.rs 1
 bubble_y		.rs 1
-bubble_move_count       .rs 1
-bubble_anim_count	.rs 1
-bubble_cooldown_count	.rs 1	
+bubble_state            .rs 1
+bubble_count            .rs 1
 theta                   .rs 1
 theta_count             .rs 1
         
@@ -147,12 +146,10 @@ ClearMemory:
 	STA bubble_x
 	LDA player_y
 	STA bubble_y
-	LDA #$00
-        STA bubble_move_count
-	STA bubble_anim_count
-	LDA #$D0
-	STA bubble_cooldown_count
+	LDA #$10
+        STA bubble_count
         LDA #$00
+        STA bubble_state
         STA theta
         STA theta_count
 
@@ -182,6 +179,12 @@ ClearMemory:
 	INX
 	LDA #HIGH(level_3)
 	STA level_data_offsets,X
+        INX
+        LDA #LOW(level_4)
+        STA level_data_offsets,X
+        INX
+        LDA #HIGH(level_4)
+        STA level_data_offsets,X
 	LDA #$FF
 	STA level_scrolling
 
@@ -708,6 +711,7 @@ UpdatePlayer:
 	;; BEQ .Finish
 	BEQ .TemporaryJumpToFinish
 	INC player_y
+        INC player_y
 	;; JMP .Finish
 	JMP .TemporaryJumpToFinish
 .Alive:
@@ -1307,95 +1311,132 @@ DrawGemsDone:
 	;; ------------------------------------------------
 
 DrawBubble:
-	LDA level_scrolling
-	BNE .DrawBubbleDoneBridge
+        LDA level_scrolling
+        BNE .DrawBubbleDoneBridge
+
+        ;; State 0
+        LDA bubble_state
+        BNE .Not0
         
-	LDA bubble_cooldown_count
-	CMP #$D0
-        BNE .CooldownBridge
-	LDA bubble_y
-	;; CMP #$18
-        CMP #$30
-	BCS .SkipFrame2
-	DEC bubble_cooldown_count
-	LDA #LOW(bubble_sprite_2)
-	STA arg0
-	LDA #HIGH(bubble_sprite_2)
-	STA arg1
-	JMP .SkipFrame1
-.SkipFrame2:
-        INC bubble_move_count
-        LDA bubble_move_count
-        CMP #$04
-        BNE .SkipMoveBubble
-        LDA #$00
-        STA bubble_move_count
-	DEC bubble_y
-.SkipMoveBubble:
+        DEC bubble_count
+        BNE .DrawBubbleDoneBridge
+
+        LDA sine
+        LSR A
+        STA theta
+        LDA player_dir
+        BEQ .SkipLeft
+        LDA player_x
+        CLC
+        ADC #$08
+        JMP .SkipRight
+.SkipLeft:
+        LDA player_x
+        SEC
+        SBC #$08
+.SkipRight:
+        STA bubble_x
+        LDA player_y
+        STA bubble_y
         
-	LDA bubble_anim_count
-	CMP #$10
-        ;; CMP #$20
-	BCS .SkipFrame0
-	INC bubble_anim_count
-	LDA #LOW(bubble_sprite_0)
-	STA arg0
-	LDA #HIGH(bubble_sprite_0)
-	STA arg1
-	JMP .SkipFrame1
-.SkipFrame0:
-	LDA #LOW(bubble_sprite_1)
-	STA arg0
-	LDA #HIGH(bubble_sprite_1)
-	STA arg1
-.SkipFrame1:
+        LDA #$10
+        STA bubble_count
+        INC bubble_state
+        JMP DrawBubbleDone
+.Not0:
         
-        JMP .SkipBridges
+        CMP #$01
+        BNE .Not1
+
+        ;; State 1
+        DEC bubble_y
+        LDA #LOW(bubble_sprite_0)
+        STA arg0
+        LDA #HIGH(bubble_sprite_0)
+        STA arg1
+        DEC bubble_count
+        BNE .Finish
+        INC bubble_state
+.Not1:
+
+        JMP .SkipDrawBubbleDoneBridge
 .DrawBubbleDoneBridge:
         JMP DrawBubbleDone
-
-.CooldownBridge:
-        JMP .Cooldown
-.SkipBridges:
+.SkipDrawBubbleDoneBridge:        
         
+        CMP #$02
+        BNE .Not2
+        
+        ;; State 2
+        DEC bubble_y
+        LDA #LOW(bubble_sprite_1)
+        STA arg0
+        LDA #HIGH(bubble_sprite_1)
+        STA arg1
+        LDA bubble_y
+        CMP #$20
+        BCS .Finish
+        LDA #$10
+        STA bubble_count
+        INC bubble_state
+.Not2:
+
+        CMP #$03
+        BNE .Not3
+
+        ;; State 3
+        LDA #LOW(bubble_sprite_2)
+        STA arg0
+        LDA #HIGH(bubble_sprite_2)
+        STA arg1
+        DEC bubble_count
+        BNE .Finish
+        LDA #$D0
+        STA bubble_count
+        LDA #$00
+        STA bubble_state
+.Not3:
+
+.Finish:
+        LDA bubble_state
+        BEQ DrawBubbleDone
+
+        LDA bubble_x
+        LDX bubble_state
+        CPX #$02
+        BNE .SkipSine
+        LDA sine
+        LSR A
+        STA work0               ; TODO: Check if safe
         LDA theta
         TAX
         INX
-        LSR A
-        STA work0               ; TODO: Check if this is safe
-        LDA bubble_x
-        CPX work0
+        CMP work0
         BCC .SkipSubtract
+        LDA bubble_x
         SEC
         SBC sine,X
         JMP .SkipAdd
 .SkipSubtract:
+        LDA bubble_x
         CLC
         ADC sine,X
 .SkipAdd:
-        STA arg2
-        
-	LDA bubble_y
-	STA arg3
-	LDA #$00
-	STA arg4
-	JSR PrepareSprites
-	JMP DrawBubbleDone
+        LDA bubble_x
+        LDX theta
+        INX
+        CLC
+        ADC sine,X
+.SkipSine:
 
-.Cooldown:
-        LDA player_air
-        BEQ DrawBubbleDone
-	DEC bubble_cooldown_count
-	BNE DrawBubbleDone
-        
-	LDA player_x
-	STA bubble_x
-	LDA player_y
-	STA bubble_y
-	LDA #$00
-	STA bubble_anim_count
-	
-DrawBubbleDone:
+        STA arg2
+        LDA bubble_y
+        STA arg3
+        LDA #$00
+        STA arg4
+        JSR PrepareSprites
+
+DrawBubbleDone: 
 	
 	;; ------------------------------------------------
 
@@ -1428,22 +1469,16 @@ NMI:
 	BEQ .SkipScrolling
 	CLC
 	ADC #$05
-        ;; PHA
 	BCC .SkipOverflow
+        LDA #$10
+        STA bubble_count
         LDA #$00
-        STA bubble_move_count
-        STA bubble_anim_count
-        LDA #$01
-	STA bubble_cooldown_count
-        LDA #$00
+        STA bubble_state
 	STA arg0
 	JSR HideLogo
         LDA #$00
 .SkipOverflow:
-        ;; PLA
 	STA level_scrolling
-        ;; LDA #%00001110 ; Disable sprites
-        ;; STA $2001
 .SkipScrolling:
 
 	LDA $2002
@@ -1482,17 +1517,17 @@ sine:
         .db $09, $08, $06, $03
         
 level_count:
-	.db $04
+	.db $05
 	
 level_0:
 	.db $01			; Fish data
-	.db $F0, $F0, $00	
+	.db $FE, $FE, $00	
 	.db $01			; Gem data
 	.db $A0, $A0	
 	
 level_1:
 	.db $01			; Fish data
-	.db $50, $47, $01	
+	.db $D0, $47, $01	
 	.db $01			; Gem data
 	.db $5F, $5F		
 	
@@ -1509,11 +1544,19 @@ level_3:
 	.db $04			; Fish data
 	.db $A0, $57, $01	
 	.db $B0, $80, $03
-	.db $A4, $A2, $02
-	.db $A0, $B8, $02
+	.db $A4, $96, $02
+	.db $A0, $AB, $02
 	.db $02			; Gem data
-	.db $30, $20		
+	.db $80, $40		
 	.db $40, $90
+
+level_4:
+        .db $03
+        .db $96, $30, $03
+        .db $A0, $40, $03
+        .db $8F, $60, $03
+        .db $01
+        .db $50, $70
 
 	;; TODO: Consider using only one attribute byte per sprite
 player_sprite_0:
