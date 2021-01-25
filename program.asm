@@ -44,7 +44,7 @@ result1			.rs 1
 result2			.rs 1
 result3			.rs 1
 	
-        .rsset $0010
+        ;; .rsset $0010
 	
 game_started		.rs 1
 game_dirty		.rs 1
@@ -62,7 +62,7 @@ level			.rs 1
 level_data_offsets	.rs 8
 level_scrolling		.rs 1
 
-	.rsset $0050
+	;; .rsset $0050
 player_x		.rs 1
 player_y		.rs 1
 player_dir		.rs 1
@@ -124,7 +124,8 @@ ClearMemory:
 	;; ------------------------------------------------
 	;; Initialize variables
 	
-	LDA #$20
+	LDA #$30                ; TODO: Check why this doesn't work
+        ;; LDA #$50
 	STA player_x
 	LDA #$80
 	STA player_y
@@ -1517,7 +1518,8 @@ sine:
         .db $09, $08, $06, $03
         
 level_count:
-	.db $05
+	;; .db $05
+        .db $04
 	
 level_0:
 	.db $01			; Fish data
