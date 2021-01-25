@@ -125,7 +125,7 @@ ClearMemory:
 	;; ------------------------------------------------
 	;; Initialize variables
 	
-	LDA #$10
+	LDA #$20
 	STA player_x
 	LDA #$80
 	STA player_y
@@ -598,7 +598,8 @@ MoveFish:
 	SEC
 	SBC work0		; Move left
 	STA result0
-        CMP #$08
+        ;; CMP #$08
+        CMP #$20
 	BCS .Finish
 	LDA arg0		; Overflow, restore x
 	STA result0
@@ -611,7 +612,8 @@ MoveFish:
 	CLC
 	ADC work0		; Move right
 	STA result0
-	CMP #$F8
+	;; CMP #$F8
+        CMP #$B0
 	BCC .Finish
 	LDA arg0		; Overflow, restore x
 	STA result0
@@ -703,7 +705,8 @@ UpdatePlayer:
 	LDA player_air
 	BNE .Alive
 	LDA player_y
-        CMP #$D2
+        ;; CMP #$D2
+        CMP #$C2
 	;; BEQ .Finish
 	BEQ .TemporaryJumpToFinish
 	INC player_y
@@ -724,7 +727,8 @@ UpdatePlayer:
 	LDA player_dir
 	BNE .SkipSwimLeft
 	LDA player_x
-	CMP #$11
+	;; CMP #$11
+        CMP #$20
 	BCC .SkipSwim
 	SEC
 	SBC #$05
@@ -748,7 +752,7 @@ UpdatePlayer:
 	JSR LoadLevel
 	LDA #$01
 	STA game_started
-	LDA #$10
+        LDA #$20
 	STA player_x
 	
 	JMP .SkipTemporaryJumpToFinish
@@ -758,14 +762,14 @@ UpdatePlayer:
 	
 .SkipSwim:
 	LDA player_y
-        CMP #$C4
+        CMP #$B4
 	BCS .SkipSink
 	INC player_y
 .SkipSink:
 	LDA player_y
-        CMP #$22
+        CMP #$34
 	BCS .NotBreathing
-        LDA #$22
+        LDA #$34
 	STA player_y
 	LDA #$04
 	STA player_air
@@ -807,7 +811,8 @@ DrawAirMeter:
 	;; LDA #$28
 	LDA #$20
 	STA $2006
-	LDA #$46
+	;; LDA #$46
+        LDA #$86
 	STA $2006
 
 	LDX #$FF
@@ -844,7 +849,7 @@ DrawScore:
 	LDA $2002
 	LDA #$20
 	STA $2006
-	LDA #$5A
+        LDA #$9C
 	STA $2006
 
 	LDX #$01
@@ -1189,7 +1194,7 @@ DrawSpriteZero:
 	STA arg1
 	LDA #$80
 	STA arg2
-	LDA #$1E
+        LDA #$2E
 	STA arg3
 	LDA #$20
 	STA arg4
