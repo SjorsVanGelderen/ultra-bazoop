@@ -59,7 +59,7 @@ gem_data		.rs 4
 
 score 			.rs 2
 level			.rs 1
-level_data_offsets	.rs 8
+level_data_offsets	.rs 10
 level_scrolling		.rs 1
 
 	;; .rsset $0050
@@ -182,9 +182,11 @@ ClearMemory:
 	STA level_data_offsets,X
         INX
         LDA #LOW(level_4)
+        ;; LDA #LOW(level_3)
         STA level_data_offsets,X
         INX
         LDA #HIGH(level_4)
+        ;; LDA #HIGH(level_3)
         STA level_data_offsets,X
 	LDA #$FF
 	STA level_scrolling
@@ -379,7 +381,7 @@ LoadLevel:
 	LDA level_data_offsets,Y 	; Store that information for lookup
 	STA work0
 	INY
-	LDA level_data_offsets,Y
+	LDA level_data_offsets,Y        
 	STA work1
 	
 	LDY #$00
@@ -709,12 +711,10 @@ UpdatePlayer:
 	BNE .Alive
 	LDA player_y
         CMP #$C2
-	;; BEQ .Finish
-	BCS .TemporaryJumpToFinish
+	BCS .FinishBridge
 	INC player_y
         INC player_y
-	;; JMP .Finish
-	JMP .TemporaryJumpToFinish
+	JMP .FinishBridge
 .Alive:
 	
 	LDA player_swim_count
@@ -745,6 +745,10 @@ UpdatePlayer:
 	BCC .SkipSwim
 	INC level
 	LDA level
+
+        CMP #$05
+        BEQ .SkipThingy
+        
 	CMP level_count
 	BNE .SkipLoopLevels
 	LDA #$00
@@ -756,11 +760,13 @@ UpdatePlayer:
 	STA game_started
         LDA #$20
 	STA player_x
-	
-	JMP .SkipTemporaryJumpToFinish
-.TemporaryJumpToFinish:
+
+.SkipThingy:
+        
+	JMP .SkipFinishBridge
+.FinishBridge:
 	JMP .Finish
-.SkipTemporaryJumpToFinish:
+.SkipFinishBridge:
 	
 .SkipSwim:
 	LDA player_y
@@ -1521,8 +1527,7 @@ sine:
         .db $09, $08, $06, $03
         
 level_count:
-	;; .db $05
-        .db $04
+	.db $05
 	
 level_0:
 	.db $01			; Fish data
