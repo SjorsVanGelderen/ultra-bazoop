@@ -603,7 +603,7 @@ MoveFish:
 	SBC work0		; Move left
 	STA result0
         ;; CMP #$08
-        CMP #$20
+        CMP #$18
 	BCS .Finish
 	LDA arg0		; Overflow, restore x
 	STA result0
@@ -710,7 +710,7 @@ UpdatePlayer:
 	LDA player_y
         CMP #$C2
 	;; BEQ .Finish
-	BEQ .TemporaryJumpToFinish
+	BCS .TemporaryJumpToFinish
 	INC player_y
         INC player_y
 	;; JMP .Finish
@@ -1322,6 +1322,9 @@ DrawBubble:
         DEC bubble_count
         BNE .DrawBubbleDoneBridge
 
+        LDA player_air
+        BEQ .DrawBubbleDoneBridge
+        
         LDA sine
         LSR A
         STA theta
