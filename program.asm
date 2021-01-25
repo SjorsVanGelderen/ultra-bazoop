@@ -140,7 +140,7 @@ ClearMemory:
 	LDA #$00
 	STA player_air_count
 
-        LDA #$0F
+        LDA #$02
         STA fish_move_count
         
 	LDA player_x
@@ -612,8 +612,7 @@ MoveFish:
 	CLC
 	ADC work0		; Move right
 	STA result0
-	;; CMP #$F8
-        CMP #$B0
+        CMP #$E8
 	BCC .Finish
 	LDA arg0		; Overflow, restore x
 	STA result0
@@ -683,7 +682,7 @@ UpdateFish:
 
         LDA fish_move_count
         BNE .SkipResetMoveCount
-        LDA #$0F
+        LDA #$02
         STA fish_move_count
 .SkipResetMoveCount:
 	PLR
@@ -705,7 +704,6 @@ UpdatePlayer:
 	LDA player_air
 	BNE .Alive
 	LDA player_y
-        ;; CMP #$D2
         CMP #$C2
 	;; BEQ .Finish
 	BEQ .TemporaryJumpToFinish
@@ -727,7 +725,6 @@ UpdatePlayer:
 	LDA player_dir
 	BNE .SkipSwimLeft
 	LDA player_x
-	;; CMP #$11
         CMP #$20
 	BCC .SkipSwim
 	SEC
@@ -1316,9 +1313,9 @@ DrawBubble:
 	LDA bubble_cooldown_count
 	CMP #$D0
         BNE .CooldownBridge
-	;; BCC .CooldownBridge
 	LDA bubble_y
-	CMP #$18
+	;; CMP #$18
+        CMP #$30
 	BCS .SkipFrame2
 	DEC bubble_cooldown_count
 	LDA #LOW(bubble_sprite_2)
@@ -1338,6 +1335,7 @@ DrawBubble:
         
 	LDA bubble_anim_count
 	CMP #$10
+        ;; CMP #$20
 	BCS .SkipFrame0
 	INC bubble_anim_count
 	LDA #LOW(bubble_sprite_0)
